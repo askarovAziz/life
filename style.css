@@ -25,6 +25,12 @@ body {
   line-height: 1.6;
 }
 
+/* Explicit base size for <h1> to avoid UA default changes */
+h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.15;
+}
+
 /* Inline icon utility (replaces Font Awesome webfont dependency) */
 .icon {
   display: inline-flex;
