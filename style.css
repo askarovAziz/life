@@ -375,6 +375,7 @@ a:focus-visible {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background-color: #0f172a;
 }
 
 .slide.active {
