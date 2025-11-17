@@ -16,12 +16,52 @@ window.showMoreCards = showMoreCards;
   const slides=$$('.slide'), dots=$$('.dot'), next=$('.next'), prev=$('.prev');
   if(!slides.length || !dots.length) return;
   let index=0, t=null;
-  const show=i=>{ slides.forEach(s=>s.classList.remove('active')); dots.forEach(d=>d.classList.remove('active')); slides[i].classList.add('active'); dots[i].classList.add('active'); };
+  const idle = window.requestIdleCallback
+    ? (cb)=>window.requestIdleCallback(cb, { timeout: 1500 })
+    : (cb)=>setTimeout(cb, 400);
+
+  const loadSlideImage = (slide)=>{
+    if(!slide) return;
+    const img = slide.querySelector('img[data-src]');
+    if(!img || img.dataset.loading === '1') return;
+    img.dataset.loading = '1';
+    if(img.dataset.srcset){
+      img.setAttribute('srcset', img.dataset.srcset);
+      img.removeAttribute('data-srcset');
+    }
+    if(img.dataset.sizes){
+      img.setAttribute('sizes', img.dataset.sizes);
+      img.removeAttribute('data-sizes');
+    }
+    img.src = img.dataset.src;
+    img.removeAttribute('data-src');
+    delete img.dataset.loading;
+  };
+
+  const warmNeighbors = (current)=>{
+    const total = slides.length;
+    const targets = [
+      slides[(current + 1) % total],
+      slides[(current - 1 + total) % total]
+    ];
+    targets.forEach(slide=> idle(()=>loadSlideImage(slide)));
+  };
+
+  const show=i=>{
+    slides.forEach(s=>s.classList.remove('active'));
+    dots.forEach(d=>d.classList.remove('active'));
+    slides[i].classList.add('active');
+    dots[i].classList.add('active');
+    loadSlideImage(slides[i]);
+    warmNeighbors(i);
+  };
   const nextSlide=()=>{ index=(index+1)%slides.length; show(index); };
   const prevSlide=()=>{ index=(index-1+slides.length)%slides.length; show(index); };
   const start=()=>{ stop(); t=setInterval(nextSlide,4000); };
   const stop=()=>{ if(t) clearInterval(t); t=null; };
-  show(index); start();
+  show(index);
+  warmNeighbors(index);
+  start();
   next && next.addEventListener('click', ()=>{ nextSlide(); start(); });
   prev && prev.addEventListener('click', ()=>{ prevSlide(); start(); });
   dots.forEach(dot=>dot.addEventListener('click', ()=>{ index=parseInt(dot.dataset.index||'0',10); show(index); start(); }));
