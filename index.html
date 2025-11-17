@@ -350,20 +350,29 @@
 <!-- Правая часть: Карта -->
 <section class="map-section max-w-md mx-auto h-[450px] w-full relative overflow-hidden rounded-xl">
   <!-- Превью (статичная картинка) -->
-  <img
-    src="img/map-preview.webp"
-    alt="Touch Life Spa location preview"
-    class="absolute top-0 left-0 w-full h-full object-cover cursor-pointer"
+  <div
     id="mapPreview"
-    loading="lazy"
-    decoding="async"
-  />
+    role="button"
+    tabindex="0"
+    aria-controls="mapIframe"
+    aria-label="Load interactive map"
+    class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-emerald-50 via-white to-emerald-100 text-center text-gray-700 font-medium cursor-pointer"
+  >
+    <svg aria-hidden="true" class="w-12 h-12 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 112.5-2.5 2.5 2.5 0 01-2.5 2.5z"/>
+    </svg>
+    <div>
+      <p class="text-lg font-semibold">Touch Life Spa</p>
+      <p class="text-sm text-gray-500">Tap to load Google Maps</p>
+    </div>
+  </div>
 
   <!-- Карта (загружается только при клике) -->
   <iframe
     id="mapIframe"
     title="Touch Life Spa location on Google Maps"
     allowfullscreen
+    loading="lazy"
     width="100%"
     height="100%"
     style="border:0; display:none;"
@@ -489,7 +498,7 @@
 </p>
 <!-- Socials -->
 <div class="flex space-x-4 mt-4 items-center">
-<a href="https://wa.me/971565785800l" target="_blank" title="WhatsApp">
+<a href="https://wa.me/971565785800" target="_blank" title="WhatsApp">
 <img alt="WhatsApp" class="w-6 h-6" loading="lazy" src="https://img.icons8.com/color/48/000000/whatsapp--v1.png"/>
 </a>
 <a href="https://www.instagram.com/touchlifespa/" target="_blank" title="Instagram">
@@ -534,29 +543,43 @@
     const mapPreview = document.getElementById("mapPreview");
     const mapIframe = document.getElementById("mapIframe");
 
+    if (!mapPreview || !mapIframe) return;
+
     // загружаем при клике или скролле до секции
     const loadMap = () => {
-      if (!mapIframe.src) {
-        mapIframe.src =
-          "https://www.google.com/maps?q=Touch+Life+Spa+Barsha+Heights+Dubai&output=embed";
-        mapIframe.style.display = "block";
-        mapPreview.style.display = "none";
-      }
+      if (mapIframe.src) return;
+      mapIframe.src =
+        "https://www.google.com/maps?q=Touch+Life+Spa+Barsha+Heights+Dubai&output=embed";
+      mapIframe.style.display = "block";
+      mapPreview.style.display = "none";
     };
 
     // при клике
     mapPreview.addEventListener("click", loadMap);
 
-    // при прокрутке — если элемент виден
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          loadMap();
-          observer.disconnect();
-        }
-      });
+    // доступность с клавиатуры
+    mapPreview.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        loadMap();
+      }
     });
-    observer.observe(mapPreview);
+
+    // при прокрутке — если элемент виден
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            loadMap();
+            observer.disconnect();
+          }
+        });
+      });
+      observer.observe(mapPreview);
+    } else {
+      // старые браузеры просто загружают карту сразу после взаимодействия
+      loadMap();
+    }
   });
 </script>
 <script src="script.js" defer></script></body>
